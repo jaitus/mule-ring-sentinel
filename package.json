@@ -1,0 +1,14 @@
+{
+  "name": "mule-ring-sentinel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Defense-only detector for merchants used as money-mule conduits on payment-aggregator rails. Razorpay AI Buildathon Track 2 entry.",
+  "scripts": {
+    "slice": "node src/eval/quickEval.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
