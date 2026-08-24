@@ -24,7 +24,7 @@ function genLayeringFanOut(ctx, [mId]) {
   const { rng, days } = ctx;
   const e = makeEmitters(ctx);
   const warmupStart = rng.int(1, Math.max(1, days - 13));
-  const warmupLen = rng.int(5, 9);
+  const warmupLen = rng.int(4, 8);
   const burstDay = Math.min(days - 1, warmupStart + warmupLen + rng.int(0, 2));
   let pooled = 0;
   for (let d = warmupStart; d < warmupStart + warmupLen && d < days; d++) {
@@ -61,7 +61,7 @@ function genSmurfingFanIn(ctx, [mId]) {
   for (let d = startDay; d < startDay + len && d < days; d++) {
     const n = rng.int(15, 50);
     for (let i = 0; i < n; i++) {
-      const amount = rng.int(30000, 500000);
+      const amount = rng.int(50000, 900000);
       e.inPayment(mId, d, `pers:${ctx.cpSeq++}`, amount);
       pooled += amount;
     }
@@ -84,10 +84,10 @@ function genDormancySpike(ctx, [mId]) {
   const { rng, days } = ctx;
   const e = makeEmitters(ctx);
   const spikeDay = rng.int(Math.floor(days * 0.55), days - 2);
-  const ins = rng.int(2, 6);
+  const ins = rng.int(2, 5);
   let spiked = 0;
   for (let i = 0; i < ins; i++) {
-    const amount = rng.int(3000000, 10000000);
+    const amount = rng.int(2500000, 8000000);
     e.inPayment(mId, spikeDay, `pers:${ctx.cpSeq++}`, amount);
     spiked += amount;
   }
@@ -113,7 +113,7 @@ function genCarousel(ctx, memberIds) {
   let pot = 0;
   const seeds = rng.int(1, 2);
   for (let i = 0; i < seeds; i++) {
-    const amount = rng.int(3000000, 8000000);
+    const amount = rng.int(2000000, 6000000);
     e.inPayment(A, s, `pers:${ctx.cpSeq++}`, amount);
     pot += amount;
   }
