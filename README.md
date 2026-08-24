@@ -60,10 +60,10 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Scaffold + README-first
 - [x] Thin vertical slice: 1 typology (layering fan-out) + deterministic rules + daily-stream scoring + CLI signal — `npm run slice`
 - [x] Full simulator: 7 legit archetypes incl. mule-mimicking ones (dropshippers ~88% pass-through, event-burst merchants, refunds) + 4 ring typologies (layering fan-out, smurfing fan-in, dormancy spike, multi-account carousel) in paise-denominated Razorpay-shaped payment events. Seed-robust: 87.5–93.8% recall, 0 FP at default threshold across unseen seeds.
+- [x] Eval harness with honest protocol: threshold tuned on 12 TRAIN worlds only (max NET → thr=0.40), reported on 20 HELD-OUT worlds never seen during tuning. Held-out @0.40: **99.7% precision ±1.3, 99.4% recall ±1.9**, NET ₹14.9L/world. Budget-matched baselines: detector beats volume-top-k and random 20/20 worlds (their wrongful holds of big legit merchants cost more than they recover), pass-through-only 20/20 (misses non-pass typologies). Sensitivity grid: NET stays positive across recovery 30–90% × disruption-cost 0.7–2.1x. `npm run eval`
 - [ ] Detection engine + FP-cost-aware gate
 - [ ] Groq investigator + case dossiers
-- [ ] Audit ledger
-- [ ] Eval harness: held-out split, precision/recall, FP cost, baselines, Monte Carlo
+- [x] Eval harness: held-out split, threshold sweep, FP cost, budget-matched baselines, sensitivity grid — `npm run eval`
 - [ ] Dashboard UI
 - [ ] Demo video
 

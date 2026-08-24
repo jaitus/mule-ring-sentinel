@@ -31,7 +31,8 @@ function genLegit(ctx, m, arch, fest) {
     }
     if (d % arch.payoutEvery === arch.payoutEvery - 1 && (dayIn > 0 || rng.chance(0.5))) {
       const lookback = Math.max(dayIn, arch.lambda * arch.avgAmt);
-      const amount = Math.round(lookback * arch.payoutFrac * rng.float(0.8, 1.2));
+      let amount = Math.round(lookback * arch.payoutFrac * rng.float(0.8, 1.2));
+      if (arch.lumpyPayout && rng.chance(0.18)) amount = Math.round(amount * rng.float(2, 3.5));
       const cp = `vend:${m.id}:${rng.int(0, arch.vendors - 1)}`;
       e.outPayout(m.id, d, cp, amount);
     }

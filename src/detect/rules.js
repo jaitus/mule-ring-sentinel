@@ -35,7 +35,7 @@ function loopCountAt(loopTimeline, d) {
   return count;
 }
 
-export function detectStream(world, threshold = 0.5) {
+export function scoreStream(world) {
   const acc = buildAccumulators(world);
   const loopTimeline = cumulativeLoopCounts(computeLoopEdgeDays(world));
   const best = new Map();
@@ -58,5 +58,13 @@ export function detectStream(world, threshold = 0.5) {
       }
     }
   }
-  return [...best.values()].map((b) => ({ ...b, flagged: b.score >= threshold }));
+  return [...best.values()];
+}
+
+export function applyThreshold(rows, threshold) {
+  return rows.map((r) => ({ ...r, flagged: r.score >= threshold }));
+}
+
+export function detectStream(world, threshold = 0.5) {
+  return applyThreshold(scoreStream(world), threshold);
 }

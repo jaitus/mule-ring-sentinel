@@ -68,11 +68,12 @@ function genSmurfingFanIn(ctx, [mId]) {
   }
   const sweepDay = Math.min(days - 1, startDay + len + rng.int(0, 1));
   if (pooled > 10000000 && sweepDay < days) {
-    const outs = rng.int(1, 3);
+    const outs = rng.int(2, 4);
     let remaining = pooled * 0.93;
     for (let i = 0; i < outs && remaining > 50000; i++) {
+      const day = Math.min(days - 1, sweepDay + (i % 3 === 2 ? 1 : 0));
       const amount = i === outs - 1 ? remaining : remaining * rng.float(0.4, 0.7);
-      e.outPayout(mId, sweepDay, `pers:${ctx.cpSeq++}`, amount);
+      e.outPayout(mId, day, `pers:${ctx.cpSeq++}`, amount);
       remaining -= amount;
     }
   }
@@ -83,10 +84,10 @@ function genDormancySpike(ctx, [mId]) {
   const { rng, days } = ctx;
   const e = makeEmitters(ctx);
   const spikeDay = rng.int(Math.floor(days * 0.55), days - 2);
-  const ins = rng.int(3, 8);
+  const ins = rng.int(2, 6);
   let spiked = 0;
   for (let i = 0; i < ins; i++) {
-    const amount = rng.int(5000000, 20000000);
+    const amount = rng.int(3000000, 10000000);
     e.inPayment(mId, spikeDay, `pers:${ctx.cpSeq++}`, amount);
     spiked += amount;
   }

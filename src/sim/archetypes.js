@@ -1,11 +1,12 @@
 export const ARCHETYPES = [
-  { name: "kirana", weight: 0.24, lambda: 9, avgAmt: 80000, amtSigma: 0.9, custPool: 40, custReuse: 0.55, vendors: 2, payoutFrac: 0.45, payoutEvery: 4, seasonal: true },
-  { name: "d2c", weight: 0.2, lambda: 16, avgAmt: 160000, amtSigma: 1.0, custPool: 80, custReuse: 0.35, vendors: 3, payoutFrac: 0.55, payoutEvery: 3, seasonal: true },
-  { name: "saas", weight: 0.13, lambda: 4, avgAmt: 450000, amtSigma: 0.6, custPool: 25, custReuse: 0.85, vendors: 2, payoutFrac: 0.4, payoutEvery: 6, seasonal: false },
-  { name: "dormant", weight: 0.12, lambda: 0.25, avgAmt: 120000, amtSigma: 0.8, custPool: 10, custReuse: 0.5, vendors: 1, payoutFrac: 0.5, payoutEvery: 9, seasonal: false },
-  { name: "dropshipper", weight: 0.13, lambda: 11, avgAmt: 240000, amtSigma: 0.7, custPool: 60, custReuse: 0.3, vendors: 3, payoutFrac: 0.88, payoutEvery: 2, seasonal: true },
-  { name: "events", weight: 0.11, lambda: 3, avgAmt: 260000, amtSigma: 0.8, custPool: 200, custReuse: 0.15, vendors: 2, payoutFrac: 0.6, payoutEvery: 2, seasonal: true, eventLambda: 42 },
+  { name: "kirana", weight: 0.22, lambda: 9, avgAmt: 80000, amtSigma: 0.9, custPool: 40, custReuse: 0.55, vendors: 2, payoutFrac: 0.45, payoutEvery: 4, seasonal: true },
+  { name: "d2c", weight: 0.18, lambda: 16, avgAmt: 160000, amtSigma: 1.0, custPool: 80, custReuse: 0.35, vendors: 3, payoutFrac: 0.55, payoutEvery: 3, seasonal: true },
+  { name: "saas", weight: 0.12, lambda: 4, avgAmt: 450000, amtSigma: 0.6, custPool: 25, custReuse: 0.85, vendors: 2, payoutFrac: 0.4, payoutEvery: 6, seasonal: false },
+  { name: "dormant", weight: 0.11, lambda: 0.25, avgAmt: 120000, amtSigma: 0.8, custPool: 10, custReuse: 0.5, vendors: 1, payoutFrac: 0.5, payoutEvery: 9, seasonal: false },
+  { name: "dropshipper", weight: 0.12, lambda: 11, avgAmt: 240000, amtSigma: 0.7, custPool: 60, custReuse: 0.3, vendors: 3, payoutFrac: 0.88, payoutEvery: 2, seasonal: true },
+  { name: "events", weight: 0.1, lambda: 3, avgAmt: 260000, amtSigma: 0.8, custPool: 200, custReuse: 0.15, vendors: 2, payoutFrac: 0.6, payoutEvery: 2, seasonal: true, eventLambda: 42 },
   { name: "freelancer", weight: 0.07, lambda: 1.2, avgAmt: 350000, amtSigma: 0.5, custPool: 15, custReuse: 0.45, vendors: 1, payoutFrac: 0.5, payoutEvery: 7, seasonal: true },
+  { name: "b2b_trader", weight: 0.18, lambda: 5, avgAmt: 4000000, amtSigma: 0.6, custPool: 30, custReuse: 0.5, vendors: 8, payoutFrac: 0.9, payoutEvery: 2, seasonal: false, lumpyPayout: true },
 ];
 
 export const METHODS = [
