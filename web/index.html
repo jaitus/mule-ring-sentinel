@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mule-Ring Sentinel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="logo">◈</span>
+    <div>
+      <h1>Mule-Ring Sentinel</h1>
+      <p class="sub">defense-only mule-conduit detection · LLM proposes, code disposes</p>
+    </div>
+  </div>
+  <div class="controls">
+    <label>seed <input id="seed" type="number" value="42" min="1" /></label>
+    <button id="load">load world</button>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi"><span class="n" id="k-merchants">–</span><span class="l">merchants monitored</span></div>
+  <div class="kpi"><span class="n" id="k-held">–</span><span class="l">funds held / queued</span></div>
+  <div class="kpi"><span class="n" id="k-esc">–</span><span class="l">escalations</span></div>
+  <div class="kpi"><span class="n" id="k-hold">–</span><span class="l">holds (auto-release 14d)</span></div>
+  <div class="kpi"><span class="n" id="k-watch">–</span><span class="l">watch-only</span></div>
+</section>
+
+<main>
+  <section class="panel" id="feed-panel">
+    <div class="panel-head">
+      <h2>payment stream</h2>
+      <div class="playback">
+        <button id="play">▶ play</button>
+        <span>day <b id="day">0</b>/30</span>
+        <span id="feed-count">0 txns</span>
+      </div>
+    </div>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>flagged queue</h2><span class="muted">gate @ threshold <b id="thr">0.40</b></span></div>
+    <div class="queue" id="queue"><p class="empty">load a world to populate the queue.</p></div>
+  </section>
+</main>
+
+<section class="panel wide" id="case-panel" hidden>
+  <div class="panel-head">
+    <h2>case dossier · <span id="case-id"></span></h2>
+    <button id="close-case">✕ close</button>
+  </div>
+  <div class="case-grid">
+    <div class="case-col">
+      <h3>deterministic findings</h3>
+      <div id="case-findings"></div>
+    </div>
+    <div class="case-col">
+      <h3>timeline</h3>
+      <svg id="spark" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+      <div id="case-stats"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel wide">
+  <div class="panel-head">
+    <h2>audit ledger</h2>
+    <span id="chain-status" class="muted">no entries yet</span>
+  </div>
+  <table class="ledger-table">
+    <thead><tr><th>#</th><th>merchant</th><th>action</th><th>score</th><th>exposure</th><th>reasons</th><th>hash</th></tr></thead>
+    <tbody id="ledger-body"></tbody>
+  </table>
+</section>
+
+<footer>Lakshya · Razorpay AI Buildathon Track 2 · every money action decided by audited code, explained by AI, chained in a tamper-evident ledger</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

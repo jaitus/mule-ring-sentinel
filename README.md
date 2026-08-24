@@ -64,8 +64,7 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Detection gate: tiered decisions (ESCALATE ≥0.6 / HOLD ≥0.4 / WATCH ≥0.3 / RELEASE) with FP-cost guardrails — batch hold cap downgrades weakest holds when holds exceed 5% of base, escalations never auto-downgraded, 14-day auto-release. `npm run pipeline`
 - [x] Audit ledger: append-only JSONL with SHA-256 hash chain (tamper-evident), resumable sequence, `verify()` walker
 - [ ] Groq investigator + case dossiers
-- [x] Eval harness: held-out split, threshold sweep, FP cost, budget-matched baselines, sensitivity grid — `npm run eval`
-- [ ] Dashboard UI
+- [x] Dashboard UI (zero-dependency): live payment-stream playback, flagged queue with reason chips + score bars, case dossier with deterministic findings + in/out timeline sparkline, hash-chained audit ledger view with verify status. `npm run dev` → http://localhost:8898
 - [ ] Demo video
 
 ## Run
@@ -75,6 +74,7 @@ npm install        # once deps land
 npm run slice      # single-world eval signal
 npm run eval       # full train/held-out report
 npm run pipeline   # sim → detect → gate → audit ledger
+npm run dev        # dashboard at http://localhost:8898
 npm test
 ```
 
