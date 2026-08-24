@@ -4,6 +4,7 @@ import { join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getRun } from "./store.js";
 import { Ledger, verify } from "../audit/ledger.js";
+import { investigate } from "../agent/investigate.js";
 
 const PORT = 8898;
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
@@ -67,7 +68,7 @@ function buildDossier(run, merchantId) {
   };
 }
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const path = url.pathname;
 
@@ -108,13 +109,17 @@ const server = createServer((req, res) => {
       return json(res, 200, { series });
     }
     if (path.startsWith("/api/dossier/")) {
-      const seed = Number(url.searchParams.get("seed") ?? 42);
+      const seedQ = Number(url.searchParams.get("seed") ?? 42);
       const id = decodeURIComponent(path.split("/")[3]);
-      const run = getRun(seed);
+      const run = getRun(seedQ);
       if (!run.rowById.has(id)) return json(res, 404, { error: "unknown merchant" });
       const dossier = buildDossier(run, id);
-      dossier.aiNarrative = null;
-      dossier.aiNote = "LLM investigator not configured on this server instance; deterministic findings are authoritative.";
+      const bundle = run.evidenceBundle(id);
+      const inv = await investigate(bundle);
+      dossier.aiNarrative = inv.ok ? inv.dossier : null;
+      dossier.aiNote = inv.ok
+        ? `AI investigation via ${inv.model} — advisory only; the gate decision is unchanged.`
+        : `LLM investigator unavailable (${inv.reason}); deterministic findings are authoritative.`;
       return json(res, 200, dossier);
     }
     if (path === "/api/ledger") {

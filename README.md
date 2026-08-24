@@ -34,7 +34,7 @@ The false-positive term is **first-class**: wrongly holding a good merchant's se
 |---|---|---|
 | **Simulator** | Synthetic world: legit merchant archetypes + injected mule-ring typologies; transactions shaped like Razorpay payments/settlements objects | Ground truth known by construction |
 | **Detector** | Deterministic graph-typology scoring (pass-through ratio, fan-out velocity, dormancy spike, burst timing) | Pure audited code; every flag carries machine-checkable reasons |
-| **Investigator** | Groq LLM turns a flagged evidence bundle into a structured case dossier (narrative, typology match, recommendation) | Proposes only — no money authority |
+| **Investigator** | Groq LLM (`qwen/qwen3.6-27b`) turns a flagged evidence bundle into a structured case dossier (narrative, typology assessment, risk/mitigating factors, recommendation) | Proposes only — no money authority. Activates when `GROQ_API_KEY` is present in `.env`; without it the product degrades gracefully to deterministic findings. 429s handled with exponential backoff + retry cap |
 | **Gate** | Deterministic policy converts detector score + dossier into HOLD / RELEASE / ESCALATE | Audited code only |
 | **Audit** | Append-only JSONL ledger of every hold/release decision with reasons | Replayable |
 | **Eval** | Held-out worlds → precision/recall, FP cost, ₹ recovered; baselines + Monte Carlo + sensitivity sweeps | Honest numbers or it doesn't ship |
@@ -51,6 +51,41 @@ The false-positive term is **first-class**: wrongly holding a good merchant's se
 - The detector is rules-first **on purpose**: for money decisions, auditable beats clever. ML can extend feature scoring later without touching the gate.
 - Recovery rate (share of held mule funds actually saved) is a modeled constant, swept in sensitivity analysis rather than pretended as fact.
 
+## Setup
+
+```powershell
+Copy-Item .env.example .env    # then paste a Groq key into .env (optional — product works without it)
+```
+
+The key is read per-process from this repo's `.env` only. Never commit it; never set it machine-wide.
+
+## Repo structure
+
+```
+src/
+  sim/        seeded world builder: archetypes, 4 ring typologies, Razorpay-shaped events
+  detect/     streaming graph-typology features + scoring (pure deterministic)
+  gate/       tiered money decisions with FP-cost guardrails (pure deterministic)
+  agent/      Groq investigator (advisory only) + CLI
+  audit/      SHA-256 hash-chained JSONL ledger
+  eval/       metrics, budget-matched baselines, train→held-out report
+  server/     zero-dependency API + static server for the dashboard
+  pipeline/   one-shot sim→detect→gate→ledger runner
+web/          vanilla JS dashboard
+test/         node:test suites (16 tests)
+```
+
+## API (dev server, port 8898)
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/run?seed=` | world summary + non-release gate decisions |
+| `GET /api/day?seed=&d=` | payment events for day d |
+| `GET /api/case/:id?seed=` | deterministic dossier |
+| `GET /api/dossier/:id?seed=` | dossier + AI investigation (if key configured) |
+| `GET /api/spark?seed=&m=` | per-day net-flow series for the timeline chart |
+| `GET /api/ledger?seed=` | audit entries + chain verification |
+
 ## Defense-only statement
 
 This repository contains no offense capability. Mule-behavior generation exists solely as **labeled test-set construction** for measuring the detector — standard practice in fraud ML. Nothing here moves real money, touches real accounts, or provides evasion guidance.
@@ -63,7 +98,7 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Eval harness with honest protocol: threshold tuned on 12 TRAIN worlds only (max NET → thr=0.40), reported on 20 HELD-OUT worlds never seen during tuning. Held-out @0.40: **99.1% precision ±2.1, 97.5% recall ±3.1**, NET ₹12.2L/world ±₹4.3L. Key evidence for the false-positive-cost bar: at thr=0.35 NET turns **negative** (−₹32L/world) — wrongful holds of high-volume legit merchants (contractors, traders) outweigh recovered mule funds, so the operating point is chosen by max NET, not max recall. Budget-matched baselines all lose 20/20 worlds (volume-top-k −₹2.3Cr/world: flags the biggest legit merchants; pass-through-only −₹6Cr/world). Sensitivity grid varies correctly with recovery (30–90%) and disruption-cost scale (0.7–2.1×). `npm run eval`
 - [x] Detection gate: tiered decisions (ESCALATE ≥0.6 / HOLD ≥0.4 / WATCH ≥0.3 / RELEASE) with FP-cost guardrails — batch hold cap downgrades weakest holds when holds exceed 5% of base, escalations never auto-downgraded, 14-day auto-release. `npm run pipeline`
 - [x] Audit ledger: append-only JSONL with SHA-256 hash chain (tamper-evident), resumable sequence, `verify()` walker
-- [ ] Groq investigator + case dossiers
+- [x] Groq investigator + case dossiers: implemented, unit-tested (16/16 incl. mocked 429/backoff/fence-recovery paths), wired into API + dashboard + CLI (`npm run investigate -- --seed 42`). Honest note: the live Groq call path is exercised only once a `GROQ_API_KEY` is configured in `.env` (see `.env.example`); until then the server serves deterministic findings with an explicit "LLM unavailable" note. The gate never depends on the LLM.
 - [x] Dashboard UI (zero-dependency): live payment-stream playback, flagged queue with reason chips + score bars, case dossier with deterministic findings + in/out timeline sparkline, hash-chained audit ledger view with verify status. `npm run dev` → http://localhost:8898
 - [ ] Demo video
 

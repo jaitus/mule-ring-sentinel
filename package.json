@@ -9,6 +9,7 @@
     "eval": "node src/eval/report.js",
     "pipeline": "node src/pipeline/run.js",
     "dev": "node src/server/api.js",
+    "investigate": "node src/agent/cli.js",
     "test": "node --test"
   },
   "engines": {

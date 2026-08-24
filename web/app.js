@@ -90,6 +90,8 @@ async function openCase(id) {
   const dossier = await api(`/api/case/${id}?seed=${seed}`);
   $("case-panel").hidden = false;
   $("case-id").textContent = `${id} [${dossier.archetype}]`;
+  $("case-ai").innerHTML = `<p class="empty">not run yet — the gate decision never depends on this.</p>`;
+  $("ai-btn").onclick = () => runAi(id);
   const f = $("case-findings");
   f.innerHTML = "";
   const addFinding = (text, cls = "") => {
@@ -127,6 +129,24 @@ async function drawSpark(id) {
       return `<rect x="${i * 10}" y="${up ? mid - h : mid}" width="8" height="${Math.max(h, 1)}" fill="${up ? "#3fd68f" : "#ff5d73"}" rx="1.5"/>`;
     })
     .join("");
+}
+
+async function runAi(id) {
+  const box = $("case-ai");
+  box.innerHTML = `<p class="empty">investigating…</p>`;
+  const d = await api(`/api/dossier/${id}?seed=${seed}`);
+  if (!d.aiNarrative) {
+    box.innerHTML = `<div class="ai-block">${d.aiNote}</div>`;
+    return;
+  }
+  const a = d.aiNarrative;
+  box.innerHTML = `
+    <div class="ai-block">${a.narrative}</div>
+    <div class="ai-block"><b>typology:</b> ${a.typology_assessment}</div>
+    ${(a.risk_factors ?? []).map((r) => `<div class="ai-block" style="border-left-color:var(--red)">risk · ${r}</div>`).join("")}
+    ${(a.mitigating_factors ?? []).map((m) => `<div class="ai-block" style="border-left-color:var(--green)">mitigating · ${m}</div>`).join("")}
+    <div class="ai-block"><b>recommendation:</b> ${a.recommended_action} · confidence ${(a.confidence * 100).toFixed(0)}%</div>
+    <div class="ai-note">${d.aiNote}</div>`;
 }
 
 $("spark").innerHTML = "";

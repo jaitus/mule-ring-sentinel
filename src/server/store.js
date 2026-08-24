@@ -34,7 +34,48 @@ export function getRun(seed = 42) {
     truth: world.truth,
     ringMeta: world.ringMeta,
     truthOfMule,
+    evidenceBundle,
   };
+
+  function evidenceBundle(merchantId) {
+    const row = run.rowById.get(merchantId);
+    const decision = run.decisions.find((d) => d.merchantId === merchantId);
+    const events = run.eventsFor(merchantId);
+    const stats = { txnCount: events.length, totalInPaise: 0, totalOutPaise: 0, distinctInCp: 0, distinctOutCp: 0 };
+    const flows = new Map();
+    const dailyNet = new Array(world.days).fill(0);
+    for (const e of events) {
+      if (e.dir === "in") {
+        stats.totalInPaise += e.amount;
+        stats.distinctInCp++;
+        dailyNet[e.d] += e.amount;
+      } else {
+        stats.totalOutPaise += e.amount;
+        stats.distinctOutCp++;
+        dailyNet[e.d] -= e.amount;
+      }
+      const f = flows.get(e.cp) ?? { cp: e.cp, inPaise: 0, outPaise: 0 };
+      if (e.dir === "in") f.inPaise += e.amount;
+      else f.outPaise += e.amount;
+      flows.set(e.cp, f);
+    }
+    stats.distinctInCp = new Set(events.filter((e) => e.dir === "in").map((e) => e.cp)).size;
+    stats.distinctOutCp = new Set(events.filter((e) => e.dir === "out").map((e) => e.cp)).size;
+    const topFlows = [...flows.values()].sort((a, b) => b.inPaise + b.outPaise - (a.inPaise + a.outPaise)).slice(0, 8);
+    return {
+      merchantId,
+      archetype: run.archetypeOf[merchantId],
+      action: decision?.action,
+      score: row?.score,
+      exposurePaise: decision?.exposurePaise,
+      reasons: decision?.reasons ?? [],
+      guardrails: decision?.guardrails ?? [],
+      stats,
+      dailyNet,
+      topFlows,
+    };
+  }
+
   cache.set(key, run);
   if (cache.size > 8) cache.delete(cache.keys().next().value);
   return run;
