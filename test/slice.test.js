@@ -11,7 +11,7 @@ test("same seed produces identical worlds", () => {
 });
 
 test("streaming detector separates rings from legit on fixed seed", () => {
-  const world = buildWorld({ seed: 42, days: 30, legitCount: 300, ringCount: 12 });
+  const world = buildWorld({ seed: 42, days: 30, legitCount: 300 });
   const results = detectStream(world);
   let tp = 0, fp = 0, fn = 0;
   for (const r of results) {
@@ -20,7 +20,11 @@ test("streaming detector separates rings from legit on fixed seed", () => {
     if (r.flagged && !isMule) fp++;
     if (!r.flagged && isMule) fn++;
   }
-  assert.equal(tp + fn, 12);
-  assert.ok(tp >= 9, `recall too low: ${tp}/12`);
-  assert.ok(fp <= 15, `too many false positives: ${fp}`);
+  assert.equal(tp + fn, 16);
+  assert.ok(recall(tp, fn) >= 0.75, `recall too low: ${tp}/16`);
+  assert.ok(fp <= 10, `too many false positives: ${fp}`);
 });
+
+function recall(tp, fn) {
+  return tp / Math.max(tp + fn, 1);
+}

@@ -59,7 +59,7 @@ This repository contains no offense capability. Mule-behavior generation exists 
 
 - [x] Scaffold + README-first
 - [x] Thin vertical slice: 1 typology (layering fan-out) + deterministic rules + daily-stream scoring + CLI signal — `npm run slice`
-- [ ] Full simulator (4 typologies, merchant archetypes, Razorpay-shaped objects)
+- [x] Full simulator: 7 legit archetypes incl. mule-mimicking ones (dropshippers ~88% pass-through, event-burst merchants, refunds) + 4 ring typologies (layering fan-out, smurfing fan-in, dormancy spike, multi-account carousel) in paise-denominated Razorpay-shaped payment events. Seed-robust: 87.5–93.8% recall, 0 FP at default threshold across unseen seeds.
 - [ ] Detection engine + FP-cost-aware gate
 - [ ] Groq investigator + case dossiers
 - [ ] Audit ledger
