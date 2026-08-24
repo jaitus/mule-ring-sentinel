@@ -100,7 +100,7 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Audit ledger: append-only JSONL with SHA-256 hash chain (tamper-evident), resumable sequence, `verify()` walker
 - [x] Groq investigator + case dossiers: implemented, unit-tested (16/16 incl. mocked 429/backoff/fence-recovery paths), wired into API + dashboard + CLI (`npm run investigate -- --seed 42`). Honest note: the live Groq call path is exercised only once a `GROQ_API_KEY` is configured in `.env` (see `.env.example`); until then the server serves deterministic findings with an explicit "LLM unavailable" note. The gate never depends on the LLM.
 - [x] Dashboard UI (zero-dependency): live payment-stream playback, flagged queue with reason chips + score bars, case dossier with deterministic findings + in/out timeline sparkline, hash-chained audit ledger view with verify status. `npm run dev` → http://localhost:8898
-- [ ] Demo video
+- [x] Demo video: 57s pitch capture (title → problem → live stream → flagged queue → case dossier → advisory-only AI → hash-chained ledger → held-out eval → outro), cursor + caption overlays, 1584×860
 
 ## Run
 
