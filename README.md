@@ -72,7 +72,7 @@ src/
   server/     zero-dependency API + static server for the dashboard
   pipeline/   one-shot sim→detect→gate→ledger runner
 web/          vanilla JS dashboard
-test/         node:test suites (16 tests)
+test/         node:test suites (19 tests)
 ```
 
 ## API (dev server, port 8898)
@@ -98,7 +98,8 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Eval harness with honest protocol: threshold tuned on 12 TRAIN worlds only (max NET → thr=0.40), reported on 20 HELD-OUT worlds never seen during tuning. Held-out @0.40: **99.1% precision ±2.1, 97.5% recall ±3.1**, NET ₹12.2L/world ±₹4.3L. Key evidence for the false-positive-cost bar: at thr=0.35 NET turns **negative** (−₹32L/world) — wrongful holds of high-volume legit merchants (contractors, traders) outweigh recovered mule funds, so the operating point is chosen by max NET, not max recall. Budget-matched baselines all lose 20/20 worlds (volume-top-k −₹2.3Cr/world: flags the biggest legit merchants; pass-through-only −₹6Cr/world). Sensitivity grid varies correctly with recovery (30–90%) and disruption-cost scale (0.7–2.1×). `npm run eval`
 - [x] Detection gate: tiered decisions (ESCALATE ≥0.6 / HOLD ≥0.4 / WATCH ≥0.3 / RELEASE) with FP-cost guardrails — batch hold cap downgrades weakest holds when holds exceed 5% of base, escalations never auto-downgraded, 14-day auto-release. `npm run pipeline`
 - [x] Audit ledger: append-only JSONL with SHA-256 hash chain (tamper-evident), resumable sequence, `verify()` walker
-- [x] Groq investigator + case dossiers: implemented, unit-tested (16/16 incl. mocked 429/backoff/fence-recovery paths), wired into API + dashboard + CLI (`npm run investigate -- --seed 42`). Honest note: the live Groq call path is exercised only once a `GROQ_API_KEY` is configured in `.env` (see `.env.example`); until then the server serves deterministic findings with an explicit "LLM unavailable" note. The gate never depends on the LLM.
+- [x] Groq investigator + case dossiers: unit-tested (19/19 incl. mocked 429/backoff/fence-recovery/token-budget paths), wired into API + dashboard + CLI (`npm run investigate -- --seed 42`). **Verified live against Groq** on seed 42: the LLM independently returned `ESCALATE` (confidence 0.92) with typology "layering fan-out" on merchant M0066, matching the deterministic gate it cannot influence. Without a `GROQ_API_KEY` the server degrades to deterministic findings with an explicit "LLM unavailable" note, and the gate never depends on the LLM either way.
+  - Two reasoning-budget notes worth stating, since both were real bugs: `qwen/qwen3.6-27b` is a reasoning model that spends ~3,100 tokens thinking before emitting JSON, so a budget that runs out mid-thought returns an *empty* completion — which Groq's `json_object` validator rejects as HTTP 400 `json_validate_failed`, not a 429, so backoff never recovers it. The investigator now requests `reasoning_effort: "none"` first (same verdict in ~256 tokens, which keeps a live demo inside the ~8,000 tok/min free tier) and escalates to a larger reasoning budget only if that specific 400 comes back. Separately, currency is now converted to rupees *before* the prompt: handing the model raw paise made it misstate magnitudes by 10×.
 - [x] Dashboard UI (zero-dependency): live payment-stream playback, flagged queue with reason chips + score bars, case dossier with deterministic findings + in/out timeline sparkline, hash-chained audit ledger view with verify status. `npm run dev` → http://localhost:8898
 - [x] Demo video: 57s pitch capture (title → problem → live stream → flagged queue → case dossier → advisory-only AI → hash-chained ledger → held-out eval → outro), cursor + caption overlays, 1584×860
 

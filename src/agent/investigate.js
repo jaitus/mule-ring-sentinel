@@ -27,16 +27,26 @@ Reply with STRICT JSON only:
  "recommended_action": "ESCALATE" | "HOLD" | "WATCH" | "RELEASE",
  "confidence": number between 0 and 1}`;
 
+// The model must never be asked to convert paise itself — it gets the magnitude
+// wrong by a factor of ten often enough to poison a dossier. Convert here.
+function inr(paise) {
+  return "₹" + Math.round((paise ?? 0) / 100).toLocaleString("en-IN");
+}
+
+function lakhs(paise) {
+  return ((paise ?? 0) / 10000000).toFixed(2);
+}
+
 export function buildPrompt(bundle) {
   const flows = (bundle.topFlows ?? [])
-    .map((f) => `  ${f.cp}: in ${f.inPaise} paise / out ${f.outPaise} paise`)
+    .map((f) => `  ${f.cp}: in ${inr(f.inPaise)} / out ${inr(f.outPaise)}`)
     .join("\n");
-  const series = (bundle.dailyNet ?? []).map((v) => Math.round(v / 100000)).join(",");
+  const series = (bundle.dailyNet ?? []).map((v) => lakhs(v)).join(",");
   return `MERCHANT: ${bundle.merchantId} [${bundle.archetype}]
-GATE ACTION: ${bundle.action} (score ${bundle.score?.toFixed?.(2)}, exposure ${bundle.exposurePaise} paise)
+GATE ACTION: ${bundle.action} (score ${bundle.score?.toFixed?.(2)}, exposure ${inr(bundle.exposurePaise)})
 DETERMINISTIC REASONS:
 ${(bundle.reasons ?? []).map((r) => `- ${r}`).join("\n") || "- none"}
-STATS: txns=${bundle.stats?.txnCount} in=${bundle.stats?.totalInPaise}p out=${bundle.stats?.totalOutPaise}p distinctIn=${bundle.stats?.distinctInCp} distinctOut=${bundle.stats?.distinctOutCp}
+STATS: txns=${bundle.stats?.txnCount} in=${inr(bundle.stats?.totalInPaise)} out=${inr(bundle.stats?.totalOutPaise)} distinctIn=${bundle.stats?.distinctInCp} distinctOut=${bundle.stats?.distinctOutCp}
 DAILY NET (₹ lakhs by day): ${series}
 TOP COUNTERPARTIES:
 ${flows || "  none"}`;
@@ -65,6 +75,29 @@ function safeJson(text) {
   }
 }
 
+// qwen3.6-27b is a reasoning model: with reasoning on it spends ~3k tokens thinking
+// before it emits a character of JSON. A budget that runs out mid-thought yields an
+// EMPTY completion, which Groq's json_object validator rejects as HTTP 400
+// json_validate_failed — not a 429, so no amount of backoff recovers it.
+// Tier 0 turns reasoning off: same verdict, ~256 tokens instead of ~3100, which also
+// keeps a live demo inside the ~8000 tok/min free-tier limit. Tier 1 is the escape
+// hatch if a bundle genuinely needs the model to think.
+const TIERS = [
+  { reasoning_effort: "none", max_tokens: 1500 },
+  { reasoning_effort: "default", max_tokens: 4000 },
+];
+
+// Mocked responses in tests carry only json(); real ones carry text(). Tolerate both.
+async function errorCode(r) {
+  try {
+    if (typeof r.text === "function") return JSON.parse(await r.text())?.error?.code ?? null;
+    if (typeof r.json === "function") return (await r.json())?.error?.code ?? null;
+  } catch {
+    /* body absent or not JSON — caller falls back to the bare status */
+  }
+  return null;
+}
+
 export async function investigate(bundle, opts = {}) {
   const env = opts.apiKey ? {} : loadEnv(opts.envPath ?? ".env");
   const apiKey = opts.apiKey ?? env.GROQ_API_KEY;
@@ -73,6 +106,7 @@ export async function investigate(bundle, opts = {}) {
   const sleepImpl = opts.sleepImpl;
   if (!apiKey) return { ok: false, reason: "no-key" };
   const maxAttempts = opts.maxAttempts ?? 4;
+  let tier = 0;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const r = await fetchImpl("https://api.groq.com/openai/v1/chat/completions", {
@@ -81,8 +115,8 @@ export async function investigate(bundle, opts = {}) {
         body: JSON.stringify({
           model,
           temperature: 0.2,
-          max_tokens: 900,
           response_format: { type: "json_object" },
+          ...TIERS[tier],
           messages: [
             { role: "system", content: SYSTEM },
             { role: "user", content: buildPrompt(bundle) },
@@ -95,11 +129,18 @@ export async function investigate(bundle, opts = {}) {
         await sleep(backoffMs(attempt), sleepImpl);
         continue;
       }
-      if (!r.ok) return { ok: false, reason: `http-${r.status}` };
+      if (!r.ok) {
+        // An empty completion is a budget problem, not a bad request. Retry richer.
+        if (r.status === 400 && (await errorCode(r)) === "json_validate_failed" && tier < TIERS.length - 1) {
+          tier++;
+          continue;
+        }
+        return { ok: false, reason: `http-${r.status}` };
+      }
       const data = await r.json();
       const parsed = safeJson(data.choices?.[0]?.message?.content ?? "");
       if (!parsed || typeof parsed.narrative !== "string") return { ok: false, reason: "bad-json" };
-      return { ok: true, dossier: parsed, model };
+      return { ok: true, dossier: parsed, model, effort: TIERS[tier].reasoning_effort };
     } catch (e) {
       if (attempt === maxAttempts) {
         return { ok: false, reason: e?.name === "TimeoutError" || e?.name === "AbortError" ? "timeout" : "network" };
