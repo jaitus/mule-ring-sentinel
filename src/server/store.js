@@ -1,8 +1,24 @@
+import { readFileSync, existsSync } from "node:fs";
 import { buildWorld } from "../sim/world.js";
 import { scoreStream, applyThreshold } from "../detect/rules.js";
 import { decide, summarize } from "../gate/policy.js";
 
-const THRESHOLD = 0.4;
+// The dashboard must show the operating point the eval actually chose, not a
+// literal that happens to agree with it today. runs/report.json is written by
+// `npm run eval`; the fallback only covers a fresh clone that has not run it yet.
+const FALLBACK_THRESHOLD = 0.4;
+function operatingPoint() {
+  try {
+    if (existsSync("runs/report.json")) {
+      const t = JSON.parse(readFileSync("runs/report.json", "utf8"))?.operatingPoint?.threshold;
+      if (typeof t === "number") return t;
+    }
+  } catch {
+    /* fall through to the documented default */
+  }
+  return FALLBACK_THRESHOLD;
+}
+const THRESHOLD = operatingPoint();
 const cache = new Map();
 
 export function getRun(seed = 42) {

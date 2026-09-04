@@ -24,17 +24,17 @@ const SEEDS = Array.from({ length: 20 }, (_, i) => 3000 + i);
 const KNOWN = Object.keys(DEFAULT_RING_MIX);
 const UNSEEN = Object.keys(UNSEEN_RING_MIX);
 
-// The operating point is imported from the train-tuned report, never re-derived.
-const OPERATING_POINT = 0.4;
-if (existsSync("runs/report.json")) {
-  const prior = JSON.parse(readFileSync("runs/report.json", "utf8"));
-  const thr = prior?.operatingPoint?.threshold;
-  if (thr !== undefined && Math.abs(thr - OPERATING_POINT) > 1e-9) {
-    throw new Error(
-      `operating point drift: report.json says ${thr}, this test uses ${OPERATING_POINT}. ` +
-        `The generalization test must reuse the train-tuned threshold, not a new one.`
-    );
-  }
+// The operating point is READ from the train-tuned report, never re-derived and
+// never hardcoded here. A literal would silently go stale the moment the eval
+// re-derives a different threshold, and this test would then be scoring at a
+// point nothing chose.
+if (!existsSync("runs/report.json")) {
+  throw new Error("run `npm run eval` first — the operating point comes from runs/report.json");
+}
+const prior = JSON.parse(readFileSync("runs/report.json", "utf8"));
+const OPERATING_POINT = prior?.operatingPoint?.threshold;
+if (typeof OPERATING_POINT !== "number") {
+  throw new Error("runs/report.json has no operatingPoint.threshold");
 }
 
 const inr = (paise) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
