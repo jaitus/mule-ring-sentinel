@@ -7,6 +7,7 @@
   "scripts": {
     "slice": "node src/eval/quickEval.js",
     "eval": "node src/eval/report.js",
+    "generalize": "node src/eval/generalization.js",
     "pipeline": "node src/pipeline/run.js",
     "dev": "node src/server/api.js",
     "investigate": "node src/agent/cli.js",

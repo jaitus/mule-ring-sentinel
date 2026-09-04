@@ -39,7 +39,13 @@ function genLegit(ctx, m, arch, fest) {
   }
 }
 
-export function buildWorld({ seed = 42, days = 30, legitCount = 320, ringMix = DEFAULT_RING_MIX } = {}) {
+export function buildWorld({
+  seed = 42,
+  days = 30,
+  legitCount = 320,
+  ringMix = DEFAULT_RING_MIX,
+  generators = RING_GENERATORS,
+} = {}) {
   const rng = makeRng(seed);
   const ctx = { rng, days, events: [], paySeq: 0, cpSeq: 0, ringSeq: 0 };
   const merchants = [];
@@ -57,7 +63,8 @@ export function buildWorld({ seed = 42, days = 30, legitCount = 320, ringMix = D
   }
 
   for (const [type, count] of Object.entries(ringMix)) {
-    const spec = RING_GENERATORS[type];
+    const spec = generators[type];
+    if (!spec) throw new Error(`no ring generator registered for "${type}"`);
     for (let r = 0; r < count; r++) {
       let members;
       if (spec.newAccounts) {
@@ -73,6 +80,19 @@ export function buildWorld({ seed = 42, days = 30, legitCount = 320, ringMix = D
         const victim = candidates[rng.int(0, candidates.length - 1)];
         truth.set(victim.id, true);
         members = [victim.id];
+      } else if (spec.hijackFrom) {
+        // Recruit existing ordinary businesses. Deliberately avoids the
+        // dormant / new_onboarding archetypes, so a ring built this way gets no
+        // thin-history signal from the scorer.
+        members = [];
+        for (let k = 0; k < (spec.members ?? 1); k++) {
+          const candidates = merchants.filter((x) => spec.hijackFrom.includes(x.archetype) && !truth.get(x.id));
+          if (!candidates.length) break;
+          const victim = candidates[rng.int(0, candidates.length - 1)];
+          truth.set(victim.id, true);
+          members.push(victim.id);
+        }
+        if (!members.length) continue;
       }
       ctx.ringSeq++;
       ringMeta.push(spec.gen(ctx, members));
