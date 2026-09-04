@@ -87,39 +87,69 @@ function maxRolling2(arr) {
   return best;
 }
 
+// A "loop edge" is a payout to an account that also funds a DIFFERENT merchant.
+//
+// This used to be evaluated in a single forward pass that only fired when the
+// inbound leg had already been seen before the outbound leg. That made detection
+// depend on the order the two legs happened to occur in: a ring that pays out on
+// day d and whose next hop receives on day d+1 produced NO edge at all, while the
+// same structure in the opposite order produced one. Chained typologies always
+// forward in that direction, so they scored zero on this feature.
+//
+// Fixed by tracking both directions and attributing the edge on the day the
+// SECOND leg is observed. That keeps the stream causal — nothing here reads an
+// event dated later than the day the edge is credited to, which is what
+// test/loop.test.js pins — while making detection independent of leg order.
 export function computeLoopEdgeDays(world) {
-  const cpPayers = new Map();
+  const cpFunds = new Map(); // counterparty -> merchants it has paid INTO, so far
+  const cpPaidBy = new Map(); // counterparty -> merchants that have paid OUT to it, so far
   const hits = new Map();
+
+  const credit = (merchant, day, cp) => {
+    let perDay = hits.get(merchant);
+    if (!perDay) {
+      perDay = new Map();
+      hits.set(merchant, perDay);
+    }
+    let cps = perDay.get(day);
+    if (!cps) {
+      cps = new Set();
+      perDay.set(day, cps);
+    }
+    cps.add(cp);
+  };
+
   for (const e of world.events) {
     if (e.dir === "in") {
-      let s = cpPayers.get(e.cp);
-      if (!s) {
-        s = new Set();
-        cpPayers.set(e.cp, s);
+      let funded = cpFunds.get(e.cp);
+      if (!funded) {
+        funded = new Set();
+        cpFunds.set(e.cp, funded);
       }
-      s.add(e.m);
+      const firstTime = !funded.has(e.m);
+      funded.add(e.m);
+      // Knowledge arrives now: any merchant that already paid out to this
+      // account is funding an account that funds someone else.
+      if (firstTime) {
+        const paidBy = cpPaidBy.get(e.cp);
+        if (paidBy) for (const pm of paidBy) if (pm !== e.m) credit(pm, e.d, e.cp);
+      }
     } else if (e.kind !== "refund") {
-      const s = cpPayers.get(e.cp);
-      if (!s || s.size === 0) continue;
-      let selfOnly = true;
-      for (const x of s) {
-        if (x !== e.m) {
-          selfOnly = false;
-          break;
+      let paidBy = cpPaidBy.get(e.cp);
+      if (!paidBy) {
+        paidBy = new Set();
+        cpPaidBy.set(e.cp, paidBy);
+      }
+      paidBy.add(e.m);
+      const funded = cpFunds.get(e.cp);
+      if (funded) {
+        for (const fm of funded) {
+          if (fm !== e.m) {
+            credit(e.m, e.d, e.cp);
+            break;
+          }
         }
       }
-      if (selfOnly) continue;
-      let perDay = hits.get(e.m);
-      if (!perDay) {
-        perDay = new Map();
-        hits.set(e.m, perDay);
-      }
-      let cps = perDay.get(e.d);
-      if (!cps) {
-        cps = new Set();
-        perDay.set(e.d, cps);
-      }
-      cps.add(e.cp);
     }
   }
   return hits;
