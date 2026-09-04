@@ -3,9 +3,9 @@ import { scoreStream, applyThreshold } from "../detect/rules.js";
 import { decide, summarize } from "../gate/policy.js";
 import { Ledger, verify } from "../audit/ledger.js";
 import { mkdirSync } from "node:fs";
+import { integerArg } from "../util/args.js";
 
-const seedIdx = process.argv.indexOf("--seed");
-const seed = seedIdx >= 0 ? Number(process.argv[seedIdx + 1]) : 42;
+const seed = integerArg(process.argv, "--seed", 42);
 const threshold = 0.4;
 
 function fmt(paise) {

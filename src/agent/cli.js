@@ -2,9 +2,9 @@ import { buildWorld } from "../sim/world.js";
 import { scoreStream, applyThreshold } from "../detect/rules.js";
 import { decide } from "../gate/policy.js";
 import { investigate } from "./investigate.js";
+import { integerArg } from "../util/args.js";
 
-const seedIdx = process.argv.indexOf("--seed");
-const seed = seedIdx >= 0 ? Number(process.argv[seedIdx + 1]) : 42;
+const seed = integerArg(process.argv, "--seed", 42);
 const mIdx = process.argv.indexOf("--merchant");
 let merchantId = mIdx >= 0 ? process.argv[mIdx + 1] : null;
 
