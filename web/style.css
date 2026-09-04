@@ -1,17 +1,20 @@
 :root {
-  --bg: #08070d;
-  --bg2: #0c0a14;
-  --panel: #16121f;
-  --panel2: #120f1a;
-  --sunk: #100d18;
-  --line: #272033;
-  --text: #e7e3ef;
-  --muted: #8d85a3;
-  --accent: #8b5cf6;
-  --accent2: #c084fc;
-  --red: #ff5d73;
-  --amber: #ffb454;
-  --green: #3fd68f;
+  --bg: #0a0806;
+  --bg2: #110d08;
+  --panel: #17120b;
+  --panel2: #13100a;
+  --sunk: #120e08;
+  --line: #2c2317;
+  --text: #f2ebdd;
+  --muted: #9c8f78;
+  --accent: #f5a524;
+  --accent2: #ffcf70;
+  --red: #ff5f6d;
+  /* Gate guardrails keep the name app.js expects, but move OFF amber: gold is
+     now the primary accent, so a warm bone/cream reads as an annotation
+     instead of competing with it. */
+  --amber: #e6d9b8;
+  --green: #4bd888;
   --ui: "Inter", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
 }
@@ -19,8 +22,8 @@
 body {
   margin: 0;
   background:
-    radial-gradient(900px 600px at 8% -10%, rgba(139, 92, 246, .13), transparent 60%),
-    radial-gradient(800px 520px at 96% 4%, rgba(192, 132, 252, .09), transparent 58%),
+    radial-gradient(900px 600px at 8% -10%, rgba(245, 165, 36, .12), transparent 60%),
+    radial-gradient(800px 520px at 96% 4%, rgba(255, 207, 112, .07), transparent 58%),
     linear-gradient(180deg, var(--bg2) 0%, var(--bg) 60%);
   background-attachment: fixed;
   color: var(--text);
@@ -32,14 +35,14 @@ header {
   align-items: center;
   padding: 15px 22px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(30, 24, 44, .55), transparent);
+  background: linear-gradient(180deg, rgba(46, 36, 20, .5), transparent);
 }
 .brand { display: flex; gap: 12px; align-items: center; }
 .logo {
   font-size: 26px;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 14px rgba(139, 92, 246, .5));
+  filter: drop-shadow(0 0 14px rgba(245, 165, 36, .45));
 }
 h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.2px; }
 .sub { margin: 0; color: var(--muted); font-size: 12px; }
@@ -53,18 +56,18 @@ input {
   border-radius: 8px;
   font: 500 13px var(--ui);
 }
-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139, 92, 246, .18); }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245, 165, 36, .18); }
 button {
-  background: linear-gradient(135deg, var(--accent), #7c4ddb);
+  background: linear-gradient(135deg, var(--accent), #e08c12);
   border: none;
-  color: #fff;
-  font: 600 13px var(--ui);
+  color: #1a1105;
+  font: 700 13px var(--ui);
   padding: 8px 15px;
   border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(139, 92, 246, .32);
+  box-shadow: 0 4px 14px rgba(245, 165, 36, .28);
 }
-button:hover { filter: brightness(1.12); }
+button:hover { filter: brightness(1.1); }
 .kpis {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -105,7 +108,7 @@ main {
 }
 h2 {
   margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
-  color: var(--accent2);
+  color: var(--accent);
 }
 .muted { color: var(--muted); font-size: 12px; }
 .playback { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); }
@@ -121,10 +124,10 @@ h2 {
   padding: 11px 13px;
   margin-bottom: 8px;
   cursor: pointer;
-  background: rgba(139, 92, 246, .03);
+  background: rgba(245, 165, 36, .03);
   transition: border-color .16s ease, background .16s ease;
 }
-.card:hover { border-color: var(--accent); background: rgba(139, 92, 246, .08); }
+.card:hover { border-color: var(--accent); background: rgba(245, 165, 36, .07); }
 .card .top { display: flex; justify-content: space-between; align-items: center; }
 .card .id { font-weight: 600; }
 .badge {
@@ -134,9 +137,9 @@ h2 {
   border-radius: 999px;
   letter-spacing: .5px;
 }
-.badge.ESCALATE { background: rgba(255, 93, 115, .16); color: var(--red); }
-.badge.HOLD { background: rgba(255, 180, 84, .16); color: var(--amber); }
-.badge.WATCH { background: rgba(139, 92, 246, .18); color: var(--accent2); }
+.badge.ESCALATE { background: rgba(255, 95, 109, .16); color: var(--red); }
+.badge.HOLD { background: rgba(245, 165, 36, .18); color: var(--accent); }
+.badge.WATCH { background: rgba(230, 217, 184, .12); color: var(--amber); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
 .chip {
   font-size: 11px;
@@ -147,7 +150,7 @@ h2 {
   border-radius: 999px;
 }
 .scorebar { position: relative; height: 5px; background: var(--sunk); border-radius: 3px; margin-top: 9px; overflow: hidden; }
-.scorebar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--red)); }
+.scorebar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--accent2), var(--accent), var(--red)); }
 .case-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
 .case-col h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
 .finding { margin-bottom: 8px; padding: 9px 11px; background: var(--sunk); border-left: 3px solid var(--red); border-radius: 6px; }
@@ -160,7 +163,7 @@ h2 {
 .ledger-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .ledger-table th, .ledger-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
 .ledger-table th { color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: .7px; }
-.hashcell { font-family: var(--mono); color: var(--accent2); opacity: .8; }
+.hashcell { font-family: var(--mono); color: var(--accent2); opacity: .75; }
 footer {
   text-align: center;
   color: var(--muted);
