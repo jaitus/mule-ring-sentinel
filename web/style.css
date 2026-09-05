@@ -235,6 +235,11 @@ h3.mt { margin-top: 22px; }
 }
 .hashcell { color: var(--accent2); }
 #chain-status { font-family: var(--mono); }
+/* a broken chain has to be unmissable, not a grey line of text */
+#chain-status.broken { color: var(--red); font-weight: 700; }
+.chainbox { display: flex; align-items: center; gap: 9px; }
+#reverify { padding: 3px 8px; font-size: 10px; }
+#reverify:disabled { opacity: .5; cursor: default; }
 
 /* scrollbars, so three panes don't look like three different apps */
 ::-webkit-scrollbar { width: 9px; height: 9px; }

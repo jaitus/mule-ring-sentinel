@@ -105,7 +105,10 @@
 
     <div class="rail-head mt">
       <h2>audit trail</h2>
-      <span class="muted" id="chain-status">no entries yet</span>
+      <div class="chainbox">
+        <span class="muted" id="chain-status">no entries yet</span>
+        <button id="reverify" title="re-read the ledger from disk and re-walk the hash chain">re-verify</button>
+      </div>
     </div>
     <div class="ledger-wrap">
       <table class="ledger-table">

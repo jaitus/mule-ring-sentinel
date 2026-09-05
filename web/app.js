@@ -193,8 +193,20 @@ async function loadWorld() {
   await loadLedger();
 }
 
+// Re-reads the ledger from disk and re-walks the hash chain. This is a real
+// operator action, not a refresh button: the whole point of a tamper-evident log
+// is being able to re-verify it on demand, against the file as it is right now.
 async function loadLedger() {
+  const btn = $("reverify");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "verifying…";
+  }
   const data = await api(`/api/ledger?seed=${seed}`);
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "re-verify";
+  }
   const tb = $("ledger-body");
   tb.innerHTML = "";
   for (const e of data.entries) {
@@ -207,12 +219,15 @@ async function loadLedger() {
       <td class="hashcell">${(e.hash ?? "").slice(0, 8)}…</td>`;
     tb.appendChild(tr);
   }
-  $("chain-status").textContent = data.entries.length
+  const st = $("chain-status");
+  st.textContent = data.entries.length
     ? `${data.verify.checked} entries · chain ${data.verify.ok ? "verify OK ✓" : "FAILED ✗"}`
     : "no entries yet";
+  st.classList.toggle("broken", data.entries.length > 0 && !data.verify.ok);
 }
 
 $("load").onclick = loadWorld;
+$("reverify").onclick = loadLedger;
 $("play").onclick = () => (timer ? stopPlay() : startPlay());
 
 loadWorld();
