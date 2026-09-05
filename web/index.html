@@ -7,13 +7,23 @@
 <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+
+<!-- Triage workbench, not a dashboard: the analyst lives in the queue on the
+     left, works one case in the centre, and checks evidence on the right. -->
 <header>
   <div class="brand">
     <span class="logo">◈</span>
     <div>
       <h1>Mule-Ring Sentinel</h1>
-      <p class="sub">defense-only mule-conduit detection · LLM proposes, code disposes</p>
+      <p class="sub">mule-conduit triage · LLM proposes, code disposes</p>
     </div>
+  </div>
+  <div class="topstats">
+    <span class="tstat"><b id="k-merchants">–</b> monitored</span>
+    <span class="tstat"><b id="k-held">–</b> held / queued</span>
+    <span class="tstat esc"><b id="k-esc">–</b> escalate</span>
+    <span class="tstat hold"><b id="k-hold">–</b> hold</span>
+    <span class="tstat watch"><b id="k-watch">–</b> watch</span>
   </div>
   <div class="controls">
     <label>seed <input id="seed" type="number" value="42" min="1" /></label>
@@ -21,66 +31,91 @@
   </div>
 </header>
 
-<section class="kpis">
-  <div class="kpi"><span class="n" id="k-merchants">–</span><span class="l">merchants monitored</span></div>
-  <div class="kpi"><span class="n" id="k-held">–</span><span class="l">funds held / queued</span></div>
-  <div class="kpi"><span class="n" id="k-esc">–</span><span class="l">escalations</span></div>
-  <div class="kpi"><span class="n" id="k-hold">–</span><span class="l">holds (auto-release 14d)</span></div>
-  <div class="kpi"><span class="n" id="k-watch">–</span><span class="l">watch-only</span></div>
-</section>
+<div class="workbench">
 
-<main>
-  <section class="panel" id="feed-panel">
-    <div class="panel-head">
-      <h2>payment stream</h2>
+  <!-- ── left rail: the queue the analyst works from ───────────────────── -->
+  <aside class="rail" id="queue-rail">
+    <div class="rail-head">
+      <h2>alert queue</h2>
+      <span class="muted">gate @ <b id="thr">0.40</b></span>
+    </div>
+    <div class="filters" id="filters">
+      <button class="f on" data-f="ALL">all</button>
+      <button class="f" data-f="ESCALATE">escalate</button>
+      <button class="f" data-f="HOLD">hold</button>
+      <button class="f" data-f="WATCH">watch</button>
+    </div>
+    <div class="queue" id="queue"><p class="empty">load a world to populate the queue.</p></div>
+  </aside>
+
+  <!-- ── centre: one case ──────────────────────────────────────────────── -->
+  <main class="case" id="case-main">
+    <div id="case-empty" class="case-empty">
+      <div class="ce-icon">◈</div>
+      <p>Select an alert to open its case.</p>
+      <p class="muted">Every flag carries machine-checkable reasons. The gate decides; the LLM only explains.</p>
+    </div>
+
+    <section id="case-panel" hidden>
+      <div class="case-top">
+        <div>
+          <div class="case-id"><span id="case-merchant"></span> <span class="muted" id="case-arch"></span></div>
+          <div class="case-sub">case dossier · deterministic findings are authoritative</div>
+        </div>
+        <div class="case-verdict">
+          <span class="badge" id="case-action"></span>
+          <div class="scoreblock">
+            <div class="scorebar"><i id="case-scorebar"></i></div>
+            <span class="scoreval" id="case-score"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="case-body">
+        <div class="case-left">
+          <h3>deterministic findings</h3>
+          <div id="case-findings"></div>
+
+          <h3 class="mt">AI investigation <span class="muted">(advisory only)</span></h3>
+          <button id="ai-btn">run AI investigation</button>
+          <div id="case-ai"><p class="empty">not run yet — the gate decision never depends on this.</p></div>
+        </div>
+
+        <div class="case-right">
+          <h3>net flow · 30 days</h3>
+          <svg id="spark" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+          <h3 class="mt">evidence</h3>
+          <div id="case-stats"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── right rail: live activity + the audit trail ───────────────────── -->
+  <aside class="rail" id="evidence-rail">
+    <div class="rail-head">
+      <h2>live stream</h2>
       <div class="playback">
         <button id="play">▶ play</button>
-        <span>day <b id="day">0</b>/30</span>
-        <span id="feed-count">0 txns</span>
+        <span>d<b id="day">0</b>/30</span>
+        <span id="feed-count">0</span>
       </div>
     </div>
     <div class="feed" id="feed"></div>
-  </section>
 
-  <section class="panel">
-    <div class="panel-head"><h2>flagged queue</h2><span class="muted">gate @ threshold <b id="thr">0.40</b></span></div>
-    <div class="queue" id="queue"><p class="empty">load a world to populate the queue.</p></div>
-  </section>
-</main>
-
-<section class="panel wide" id="case-panel" hidden>
-  <div class="panel-head">
-    <h2>case dossier · <span id="case-id"></span></h2>
-    <button id="close-case">✕ close</button>
-  </div>
-  <div class="case-grid">
-    <div class="case-col">
-      <h3>deterministic findings</h3>
-      <div id="case-findings"></div>
-      <h3 style="margin-top:14px">AI investigation <span class="muted">(advisory only)</span></h3>
-      <button id="ai-btn" style="margin-bottom:8px">run AI investigation</button>
-      <div id="case-ai"><p class="empty">not run yet — the gate decision never depends on this.</p></div>
+    <div class="rail-head mt">
+      <h2>audit trail</h2>
+      <span class="muted" id="chain-status">no entries yet</span>
     </div>
-    <div class="case-col">
-      <h3>timeline</h3>
-      <svg id="spark" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
-      <div id="case-stats"></div>
+    <div class="ledger-wrap">
+      <table class="ledger-table">
+        <thead><tr><th>#</th><th>merchant</th><th>action</th><th>exposure</th><th>hash</th></tr></thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
     </div>
-  </div>
-</section>
+  </aside>
 
-<section class="panel wide">
-  <div class="panel-head">
-    <h2>audit ledger</h2>
-    <span id="chain-status" class="muted">no entries yet</span>
-  </div>
-  <table class="ledger-table">
-    <thead><tr><th>#</th><th>merchant</th><th>action</th><th>score</th><th>exposure</th><th>reasons</th><th>hash</th></tr></thead>
-    <tbody id="ledger-body"></tbody>
-  </table>
-</section>
-
-<footer>Lakshya · Razorpay AI Buildathon Track 2 · every money action decided by audited code, explained by AI, chained in a tamper-evident ledger</footer>
+</div>
 
 <script src="/app.js"></script>
 </body>
