@@ -1,6 +1,8 @@
 # Mule-Ring Sentinel
 
-**Razorpay AI Buildathon — Track 2 (AI Risk Manager) · Entry #2 by Lakshya**
+**Razorpay AI Buildathon — Track 2 · AI Risk Manager**
+
+**▶ Pitch video: https://youtu.be/TMi0BxJgbC8** (4:28)
 
 A **defense-only** detector that flags merchants whose payment-aggregator accounts are being used as **money-mule conduits** — before their settlements leave the platform. Every money decision is made by audited deterministic code. The LLM investigates and explains; it never decides. *LLM proposes, code disposes.*
 
@@ -159,7 +161,7 @@ This repository contains no offense capability. Mule-behavior generation exists 
 - [x] Groq investigator + case dossiers: unit-tested (38/38 suite-wide, incl. mocked 429/backoff/fence-recovery/token-budget paths), wired into API + dashboard + CLI (`npm run investigate -- --seed 42`). **Verified live against Groq** on seed 42: the LLM independently returned `ESCALATE` (confidence 0.92) with typology "layering fan-out" on merchant M0066, matching the deterministic gate it cannot influence. Without a `GROQ_API_KEY` the server degrades to deterministic findings with an explicit "LLM unavailable" note, and the gate never depends on the LLM either way.
   - Two reasoning-budget notes worth stating, since both were real bugs: `qwen/qwen3.6-27b` is a reasoning model that spends ~3,100 tokens thinking before emitting JSON, so a budget that runs out mid-thought returns an *empty* completion — which Groq's `json_object` validator rejects as HTTP 400 `json_validate_failed`, not a 429, so backoff never recovers it. The investigator now requests `reasoning_effort: "none"` first (same verdict in ~256 tokens, which keeps a live demo inside the ~8,000 tok/min free tier) and escalates to a larger reasoning budget only if that specific 400 comes back. Separately, currency is now converted to rupees *before* the prompt: handing the model raw paise made it misstate magnitudes by 10×.
 - [x] Dashboard UI (zero-dependency): live payment-stream playback, flagged queue with reason chips + score bars, case dossier with deterministic findings + in/out timeline sparkline, hash-chained audit ledger view with verify status. `npm run dev` → http://localhost:8898
-- [x] Pitch video: `docs/demo.mp4` — **4:15**, 1600×900, 30 fps, against the buildathon's 5-minute allowance. 15 scenes: problem → architecture → live payment stream → flagged queue and case dossier → a real Groq call that is advisory-only → hash-chained ledger verifying → the NET objective with both error costs → the threshold sweep and why NET goes negative → held-out results and the null baseline → the generalization test, the 97.5-point gap, and the two improvements that were measured and rejected → honest limitations. Every number on screen is captured stdout from `npm run eval` / `npm run generalize`, not retyped. Silent by design; narration captions are burned in. The encoder refuses to write the file if the render exceeds 5:00.
+- [x] Pitch video — **▶ https://youtu.be/TMi0BxJgbC8** (4:28). Problem → architecture → live payment stream → flagged queue and case dossier → a real Groq call that is advisory-only → a ledger row tampered on camera and rejected by the hash chain → the NET objective with both error costs → the threshold sweep and why NET goes negative → held-out results against a do-nothing baseline → the generalization test, the 97.5-point gap, and the two improvements that were measured and rejected → honest limitations. Every number on screen is captured stdout from `npm run eval` / `npm run generalize`, not retyped.
 
 ## Run
 
@@ -174,4 +176,4 @@ npm test
 ```
 
 ---
-Lakshya · Razorpay AI Buildathon · Track 2 · Sept 5, 2026 deadline
+Lakshya · Razorpay AI Buildathon · Track 2 — AI Risk Manager
